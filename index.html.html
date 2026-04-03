@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EarnSure — Gig Worker Income Protection</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* ── RESET & ROOT ──────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#0052cc;--blue-l:#1a6fe8;--blue-d:#003a99;
+  --green:#28a745;--green-l:#34c65a;--gold:#f0a500;
+  --navy:#0f1f3d;--navy-m:#1a2f52;--navy-l:#243c6a;
+  --slate:#e8eef8;--muted:#6b7fa3;--white:#fff;
+  --danger:#e53e3e;--warn:#f6ad55;--bg:#f0f4ff;
+  --sidebar:260px;--radius:14px;
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--navy);}
+a{text-decoration:none;color:inherit;}
+button{cursor:pointer;font-family:inherit;}
+input,select,textarea{font-family:inherit;}
+
+/* ── SCREENS ──────────────────────────────────── */
+.screen{display:none;width:100%;min-height:100vh;}
+.screen.active{display:flex;}
+
+/* ═══════════════════════════════════════════════
+   AUTH SCREEN
+═══════════════════════════════════════════════ */
+#screen-auth{
+  align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy-m) 50%,var(--blue-d) 100%);
+  position:relative;overflow:hidden;
+}
+#screen-auth::before{
+  content:'';position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px);
+  background-size:50px 50px;
+}
+.auth-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.15;}
+.auth-blob.a{width:400px;height:400px;background:var(--blue);top:-100px;right:-100px;}
+.auth-blob.b{width:300px;height:300px;background:var(--green);bottom:-80px;left:-80px;}
+
+.auth-card{
+  position:relative;background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);
+  border-radius:24px;padding:42px 40px;width:420px;
+  box-shadow:0 30px 80px rgba(0,0,0,0.35);
+}
+.auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;justify-content:center;}
+.auth-shield{
+  width:52px;height:52px;border-radius:14px;
+  background:linear-gradient(135deg,var(--blue),var(--green));
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.5rem;font-weight:900;color:white;
+  box-shadow:0 8px 24px rgba(0,82,204,0.45);
+}
+.auth-brand{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:white;letter-spacing:0.5px;}
+.auth-brand span{color:var(--green-l);}
+.auth-sub{font-size:.8rem;color:rgba(255,255,255,.45);text-align:center;margin-bottom:28px;margin-top:-20px;}
+
+.auth-tabs{display:flex;gap:4px;background:rgba(255,255,255,.07);border-radius:10px;padding:4px;margin-bottom:24px;}
+.auth-tab{flex:1;padding:9px;border-radius:8px;border:none;background:transparent;color:rgba(255,255,255,.55);font-size:.85rem;font-weight:600;transition:all .2s;}
+.auth-tab.active{background:rgba(255,255,255,.15);color:white;}
+
+.auth-panel{display:none;}
+.auth-panel.active{display:block;}
+
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:.78rem;font-weight:600;color:rgba(255,255,255,.6);margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase;}
+.field input,.field select{
+  width:100%;padding:11px 14px;border-radius:10px;
+  background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.15);
+  color:white;font-size:.9rem;outline:none;transition:border-color .2s;
+}
+.field input::placeholder{color:rgba(255,255,255,.3);}
+.field input:focus,.field select:focus{border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.13);}
+.field select option{background:#1a2f52;color:white;}
+
+.btn-auth{
+  width:100%;padding:13px;border-radius:10px;border:none;
+  background:linear-gradient(135deg,var(--blue),var(--blue-l));
+  color:white;font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;
+  box-shadow:0 6px 20px rgba(0,82,204,.4);transition:all .2s;margin-top:4px;
+}
+.btn-auth:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,82,204,.5);}
+
+.step-indicator{display:flex;gap:8px;margin-bottom:20px;justify-content:center;}
+.step-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.25);transition:all .3s;}
+.step-dot.done{background:var(--green-l);}
+.step-dot.active{background:var(--blue-l);width:24px;border-radius:4px;}
+
+.auth-footer{text-align:center;margin-top:18px;font-size:.82rem;color:rgba(255,255,255,.4);}
+.auth-footer a{color:rgba(255,255,255,.7);font-weight:600;}
+
+/* ═══════════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════════ */
+#screen-app{flex-direction:row;}
+
+/* SIDEBAR */
+.sidebar{
+  width:var(--sidebar);background:var(--navy);
+  display:flex;flex-direction:column;height:100vh;
+  position:fixed;left:0;top:0;z-index:100;
+  border-right:1px solid rgba(255,255,255,.07);
+}
+.sidebar-brand{
+  padding:28px 22px 22px;border-bottom:1px solid rgba(255,255,255,.08);
+  display:flex;align-items:center;gap:12px;
+}
+.brand-shield{
+  width:42px;height:42px;border-radius:10px;
+  background:linear-gradient(135deg,var(--blue),var(--green));
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;font-weight:900;color:white;
+  box-shadow:0 4px 12px rgba(0,82,204,.4);
+}
+.brand-name{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;color:white;}
+.brand-name span{color:var(--green-l);}
+.brand-role{font-size:.68rem;color:rgba(255,255,255,.35);margin-top:1px;}
+
+.nav-section{font-size:.62rem;font-weight:700;letter-spacing:.12em;color:rgba(255,255,255,.28);text-transform:uppercase;padding:18px 22px 7px;}
+.nav-link{
+  display:flex;align-items:center;gap:11px;padding:10px 22px;
+  color:rgba(255,255,255,.5);font-size:.875rem;font-weight:500;
+  transition:all .2s;border-left:3px solid transparent;cursor:pointer;
+}
+.nav-link:hover{color:white;background:rgba(255,255,255,.06);}
+.nav-link.active{color:white;background:rgba(0,82,204,.2);border-left-color:var(--blue-l);}
+.nav-link .ni{
+  width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:.9rem;background:rgba(255,255,255,.07);flex-shrink:0;
+}
+.nav-link.active .ni{background:rgba(0,82,204,.35);}
+
+.sidebar-footer{margin-top:auto;padding:18px 22px;border-top:1px solid rgba(255,255,255,.08);}
+.user-pill{display:flex;align-items:center;gap:10px;}
+.user-avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--green));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:.8rem;color:white;flex-shrink:0;
+}
+.user-name{font-size:.83rem;color:white;font-weight:600;}
+.user-role-label{font-size:.68rem;color:rgba(255,255,255,.38);}
+.btn-logout{
+  width:100%;margin-top:12px;padding:9px;border-radius:10px;border:none;
+  background:rgba(255,255,255,.07);color:rgba(255,255,255,.5);
+  font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:8px;justify-content:center;
+  transition:all .2s;
+}
+.btn-logout:hover{background:rgba(229,62,62,.2);color:#f87171;}
+
+/* MAIN AREA */
+.main{margin-left:var(--sidebar);flex:1;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{
+  background:white;padding:0 32px;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid #e2e8f8;flex-shrink:0;
+}
+.topbar-title{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:var(--navy);}
+.topbar-title span{color:var(--blue);}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.live-badge{
+  display:flex;align-items:center;gap:7px;
+  background:#f0fff4;border:1px solid #c6f6d5;border-radius:20px;
+  padding:6px 14px;font-size:.78rem;font-weight:600;color:#22543d;
+}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse-dot 1.5s ease infinite;}
+@keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 rgba(40,167,69,.5);}50%{box-shadow:0 0 0 5px rgba(40,167,69,0);}}
+.btn-notif{
+  width:38px;height:38px;border-radius:10px;background:var(--slate);border:none;
+  display:flex;align-items:center;justify-content:center;font-size:1rem;position:relative;
+}
+.notif-badge{
+  position:absolute;top:-4px;right:-4px;background:var(--danger);color:white;
+  width:16px;height:16px;border-radius:50%;font-size:.58rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+}
+
+.content{flex:1;overflow-y:auto;padding:28px 32px;display:flex;flex-direction:column;gap:22px;}
+.content::-webkit-scrollbar{width:5px;}
+.content::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:10px;}
+
+/* ═══════════════════════════════════════════════
+   SHARED COMPONENTS
+═══════════════════════════════════════════════ */
+.page{display:none;flex-direction:column;gap:22px;}
+.page.active{display:flex;}
+
+/* Stat cards */
+.stats-row{display:grid;gap:16px;}
+.cols-4{grid-template-columns:repeat(4,1fr);}
+.cols-3{grid-template-columns:repeat(3,1fr);}
+.cols-2{grid-template-columns:repeat(2,1fr);}
+
+.stat-card{
+  background:white;border-radius:var(--radius);padding:20px 22px;
+  border:1px solid #e2e8f8;position:relative;overflow:hidden;
+}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.sc-blue::before{background:linear-gradient(90deg,var(--blue),var(--blue-l));}
+.sc-green::before{background:linear-gradient(90deg,var(--green),var(--green-l));}
+.sc-gold::before{background:linear-gradient(90deg,#e08900,var(--gold));}
+.sc-red::before{background:linear-gradient(90deg,#c53030,var(--danger));}
+.sc-purple::before{background:linear-gradient(90deg,#7c3aed,#a78bfa);}
+
+.stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin-bottom:12px;}
+.sc-blue .stat-icon{background:#eff6ff;} .sc-green .stat-icon{background:#f0fff4;}
+.sc-gold .stat-icon{background:#fffbeb;} .sc-red .stat-icon{background:#fff5f5;}
+.sc-purple .stat-icon{background:#f5f3ff;}
+
+.stat-value{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:var(--navy);line-height:1;}
+.stat-label{font-size:.78rem;color:var(--muted);margin-top:4px;font-weight:500;}
+.stat-change{font-size:.73rem;margin-top:8px;font-weight:600;}
+.up{color:var(--green);} .dn{color:var(--danger);}
+
+/* Cards/panels */
+.panel{background:white;border-radius:var(--radius);border:1px solid #e2e8f8;overflow:hidden;}
+.panel-hdr{
+  padding:16px 22px;border-bottom:1px solid #f0f4ff;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.panel-title{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:8px;}
+.panel-body{padding:20px 22px;}
+
+/* Tables */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding:10px 14px;text-align:left;border-bottom:2px solid #f0f4ff;}
+td{padding:13px 14px;font-size:.875rem;border-bottom:1px solid #f8faff;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#f8faff;}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:.68rem;font-weight:700;}
+.badge-green{background:#dcfce7;color:#166534;}
+.badge-red{background:#fee2e2;color:#991b1b;}
+.badge-yellow{background:#fef9c3;color:#854d0e;}
+.badge-blue{background:#dbeafe;color:#1e40af;}
+.badge-gray{background:#f1f5f9;color:#475569;}
+
+/* Buttons */
+.btn{
+  padding:9px 18px;border-radius:9px;border:none;
+  font-size:.83rem;font-weight:600;display:inline-flex;align-items:center;gap:7px;
+  transition:all .2s;cursor:pointer;
+}
+.btn-primary{background:var(--blue);color:white;}
+.btn-primary:hover{background:var(--blue-l);box-shadow:0 6px 18px rgba(0,82,204,.3);}
+.btn-success{background:var(--green);color:white;}
+.btn-success:hover{background:var(--green-l);}
+.btn-danger{background:var(--danger);color:white;}
+.btn-danger:hover{background:#c53030;}
+.btn-ghost{background:var(--slate);color:var(--muted);}
+.btn-ghost:hover{background:#dce5f5;color:var(--navy);}
+.btn-sm{padding:5px 12px;font-size:.75rem;border-radius:7px;}
+
+/* Forms */
+.form-group{margin-bottom:18px;}
+.form-group label{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;}
+.form-control{
+  width:100%;padding:10px 14px;border-radius:10px;border:1.5px solid #e2e8f8;
+  font-size:.9rem;outline:none;transition:border-color .2s;background:white;color:var(--navy);
+}
+.form-control:focus{border-color:var(--blue);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+/* Alerts strip */
+.alerts-strip{
+  background:white;border-radius:var(--radius);border:1px solid #e2e8f8;
+  padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.alerts-title{font-family:'Syne',sans-serif;font-size:.83rem;font-weight:800;color:var(--navy);white-space:nowrap;}
+.alert-chip{
+  display:flex;align-items:center;gap:7px;padding:5px 13px;
+  border-radius:20px;font-size:.76rem;font-weight:600;
+}
+.ac-warn{background:#fffbeb;color:#92400e;border:1px solid #fcd34d;}
+.ac-danger{background:#fff5f5;color:#991b1b;border:1px solid #fca5a5;}
+.ac-info{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;}
+
+/* Control buttons */
+.ctrl-btns{display:flex;gap:6px;}
+.ctrl-btn{
+  padding:6px 14px;border-radius:8px;font-size:.76rem;font-weight:600;
+  border:1px solid #e2e8f8;background:var(--slate);color:var(--muted);cursor:pointer;transition:all .2s;
+}
+.ctrl-btn.active,.ctrl-btn:hover{background:var(--blue);color:white;border-color:var(--blue);}
+
+/* ═══════════════════════════════════════════════
+   ADMIN DASHBOARD – MAP & RIDERS
+═══════════════════════════════════════════════ */
+.two-col{display:grid;grid-template-columns:1fr 380px;gap:20px;}
+.map-panel{display:flex;flex-direction:column;min-height:360px;}
+.map-area{
+  flex:1;background:#1a2f52;position:relative;overflow:hidden;min-height:320px;
+}
+.map-area::before{
+  content:'';position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+.map-road{position:absolute;background:rgba(255,255,255,.08);border-radius:2px;}
+.map-zone{position:absolute;border-radius:50%;border:2px dashed;display:flex;align-items:center;justify-content:center;}
+.zone-label{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:rgba(0,0,0,.5);color:white;padding:2px 8px;border-radius:10px;position:absolute;bottom:-12px;}
+.rider-dot{
+  position:absolute;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.65rem;font-weight:700;color:white;cursor:pointer;transition:left 1.8s ease,top 1.8s ease;z-index:10;
+}
+.rider-dot:hover{transform:scale(1.4);z-index:20;}
+.rd-online{background:var(--green);box-shadow:0 0 0 4px rgba(40,167,69,.25);}
+.rd-busy{background:var(--gold);box-shadow:0 0 0 4px rgba(240,165,0,.25);}
+.rd-offline{background:var(--danger);box-shadow:0 0 0 4px rgba(229,62,62,.2);}
+.rd-selected{outline:3px solid white;outline-offset:2px;}
+
+.rider-tooltip{
+  display:none;position:absolute;bottom:130%;left:50%;transform:translateX(-50%);
+  background:rgba(15,31,61,.95);color:white;padding:8px 12px;border-radius:10px;
+  font-size:.7rem;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.3);line-height:1.6;z-index:50;
+}
+.rider-dot:hover .rider-tooltip{display:block;}
+.rd-moving{animation:rider-move 3s ease-in-out infinite alternate;}
+@keyframes rider-move{from{transform:translate(0,0);}to{transform:translate(6px,-5px);}}
+
+.aqi-overlay{
+  position:absolute;top:12px;left:50%;transform:translateX(-50%);
+  background:rgba(245,101,0,.9);color:white;padding:6px 16px;border-radius:20px;
+  font-size:.73rem;font-weight:700;display:none;z-index:30;
+}
+.aqi-overlay.show{display:block;}
+.trigger-ring{
+  position:absolute;border-radius:50%;border:2px solid rgba(245,101,0,.4);
+  background:rgba(245,101,0,.05);animation:tring 2.5s ease-out infinite;pointer-events:none;
+}
+@keyframes tring{0%{transform:translate(-50%,-50%) scale(0.6);opacity:.8;}100%{transform:translate(-50%,-50%) scale(3.5);opacity:0;}}
+
+.map-legend{padding:10px 16px;background:rgba(15,31,61,.9);display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:.7rem;color:rgba(255,255,255,.65);font-weight:500;}
+.legend-dot{width:9px;height:9px;border-radius:50%;}
+
+/* Riders panel */
+.riders-panel{display:flex;flex-direction:column;overflow:hidden;}
+.rider-search{padding:12px 16px;border-bottom:1px solid #f0f4ff;}
+.rider-search input{
+  width:100%;padding:9px 14px;border-radius:10px;border:1.5px solid #e2e8f8;
+  font-size:.85rem;background:#f8faff;color:var(--navy);outline:none;
+}
+.rider-search input:focus{border-color:var(--blue);background:white;}
+.riders-list{flex:1;overflow-y:auto;padding:6px;max-height:260px;}
+.riders-list::-webkit-scrollbar{width:4px;}
+.riders-list::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:10px;}
+
+.rider-item{
+  display:flex;align-items:center;gap:11px;padding:11px 13px;
+  border-radius:11px;cursor:pointer;transition:all .2s;margin-bottom:2px;
+}
+.rider-item:hover{background:#f8faff;}
+.rider-item.active{background:#eff6ff;border:1px solid #bfdbfe;}
+
+.r-avatar{
+  width:38px;height:38px;border-radius:11px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:.85rem;color:white;flex-shrink:0;
+}
+.r-info{flex:1;min-width:0;}
+.r-name{font-weight:600;font-size:.85rem;color:var(--navy);}
+.r-meta{font-size:.7rem;color:var(--muted);margin-top:1px;}
+
+.rider-detail{border-top:1px solid #f0f4ff;padding:16px;background:#f8faff;display:none;}
+.rider-detail.show{display:block;}
+.detail-title{font-family:'Syne',sans-serif;font-size:.83rem;font-weight:700;color:var(--navy);margin-bottom:12px;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.di-label{font-size:.65rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;}
+.di-value{font-size:.83rem;font-weight:600;color:var(--navy);margin-top:2px;}
+
+.track-btn{
+  width:100%;margin-top:14px;padding:10px;border-radius:10px;
+  background:linear-gradient(135deg,var(--blue),var(--blue-l));
+  color:white;border:none;font-family:'Syne',sans-serif;font-weight:700;font-size:.83rem;
+  display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;
+}
+.track-btn:hover{box-shadow:0 6px 18px rgba(0,82,204,.35);transform:translateY(-1px);}
+.track-btn.tracking{background:linear-gradient(135deg,var(--danger),#c53030);}
+
+/* ═══════════════════════════════════════════════
+   GIG WORKER PAGES
+═══════════════════════════════════════════════ */
+.policy-card{
+  background:linear-gradient(135deg,#1e293b,#334155);color:white;
+  border-radius:var(--radius);padding:28px;position:relative;overflow:hidden;
+}
+.policy-card::after{
+  content:'🛡️';position:absolute;right:-10px;top:-10px;font-size:7rem;opacity:.08;line-height:1;
+}
+.policy-id{font-family:monospace;letter-spacing:2px;font-size:.78rem;color:rgba(255,255,255,.5);margin-bottom:16px;}
+.policy-name{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:#38bdf8;}
+.policy-meta{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;}
+.pm-label{font-size:.65rem;text-transform:uppercase;opacity:.6;letter-spacing:.08em;}
+.pm-value{font-size:1rem;font-weight:700;margin-top:4px;}
+
+.payout-bank-card{
+  display:flex;align-items:center;background:#f8fafc;
+  padding:16px;border-radius:12px;border:1.5px solid #e2e8f8;gap:14px;
+}
+.bank-icon{font-size:1.6rem;}
+.bank-name{font-weight:700;font-size:.9rem;color:var(--navy);}
+.bank-sub{font-size:.73rem;color:var(--muted);margin-top:2px;}
+
+/* ═══════════════════════════════════════════════
+   CAPTAIN PAGES
+═══════════════════════════════════════════════ */
+.activity-feed{display:flex;flex-direction:column;gap:10px;}
+.activity-item{
+  display:flex;gap:12px;padding:12px 0;
+  border-bottom:1px solid #f0f4ff;align-items:flex-start;
+}
+.activity-item:last-child{border-bottom:none;}
+.act-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+
+/* ═══════════════════════════════════════════════
+   SUPERADMIN
+═══════════════════════════════════════════════ */
+.risk-bar{height:8px;border-radius:4px;background:#f0f4ff;overflow:hidden;}
+.risk-fill{height:100%;border-radius:4px;transition:width .5s ease;}
+
+/* ═══════════════════════════════════════════════
+   PROFILE
+═══════════════════════════════════════════════ */
+.profile-avatar-lg{
+  width:100px;height:100px;border-radius:50%;margin:0 auto 16px;
+  background:linear-gradient(135deg,var(--blue),var(--green));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:white;
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE & UTILS
+═══════════════════════════════════════════════ */
+.flex-between{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.txt-center{text-align:center;}
+.mt-4{margin-top:4px;} .mt-8{margin-top:8px;} .mt-16{margin-top:16px;} .mt-20{margin-top:20px;}
+.gap-8{gap:8px;}
+.toast{
+  position:fixed;bottom:24px;right:24px;background:var(--navy);color:white;
+  padding:14px 22px;border-radius:12px;font-size:.85rem;font-weight:600;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:999;opacity:0;transform:translateY(20px);
+  transition:all .3s;pointer-events:none;display:flex;align-items:center;gap:10px;
+}
+.toast.show{opacity:1;transform:translateY(0);}
+
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);}
+  .main{margin-left:0;}
+  .two-col{grid-template-columns:1fr;}
+  .cols-4{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ TOAST ════════════════════════════ -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN: AUTH
+═══════════════════════════════════════ -->
+<div class="screen active" id="screen-auth">
+  <div class="auth-blob a"></div>
+  <div class="auth-blob b"></div>
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-shield">E</div>
+    </div>
+    <div class="auth-brand txt-center" style="color:white;margin-top:-8px;margin-bottom:4px;">Earn<span>Sure</span></div>
+    <div class="auth-sub">Income Protection for Gig Workers</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login',this)">Sign In</button>
+      <button class="auth-tab" onclick="switchAuthTab('register',this)">Register</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="auth-panel active" id="auth-login">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="login-pass" placeholder="••••••••">
+      </div>
+      <div class="field">
+        <label>Login as</label>
+        <select id="login-role">
+          <option value="gig">🛵 Gig Worker</option>
+          <option value="captain">👨‍💼 Captain (Zone Manager)</option>
+          <option value="admin">🛡️ Admin Staff</option>
+          <option value="superadmin">⚡ Super Admin</option>
+        </select>
+      </div>
+      <button class="btn-auth" onclick="doLogin()">Sign In →</button>
+      <div class="auth-footer">Demo: any email/password works · <a onclick="switchAuthTab('register',document.querySelectorAll('.auth-tab')[1])" style="cursor:pointer;">Create account</a></div>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="auth-panel" id="auth-register">
+      <div class="step-indicator">
+        <div class="step-dot active" id="sd0"></div>
+        <div class="step-dot" id="sd1"></div>
+        <div class="step-dot" id="sd2"></div>
+      </div>
+
+      <div id="reg-step-0">
+        <div class="field"><label>Full Name</label><input type="text" id="reg-name" placeholder="Arjun Sharma"></div>
+        <div class="field"><label>Phone Number</label><input type="tel" id="reg-phone" placeholder="+91 9876543210"></div>
+        <button class="btn-auth" onclick="regNext(1)">Next Step →</button>
+      </div>
+      <div id="reg-step-1" style="display:none">
+        <div class="field">
+          <label>Primary Platform</label>
+          <select id="reg-platform">
+            <option value="zomato">🍕 Zomato</option>
+            <option value="swiggy">🚀 Swiggy</option>
+            <option value="zepto">⚡ Zepto</option>
+            <option value="uber">🚗 Uber</option>
+            <option value="rapido">🏍️ Rapido</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Your Zone / City</label>
+          <select id="reg-zone">
+            <option>Mumbai — Andheri</option>
+            <option>Mumbai — Bandra</option>
+            <option>Mumbai — Kurla</option>
+            <option>Delhi — Central</option>
+            <option>Bangalore — Koramangala</option>
+          </select>
+        </div>
+        <button class="btn-auth" onclick="regNext(2)">Final Step →</button>
+      </div>
+      <div id="reg-step-2" style="display:none">
+        <div class="field"><label>Email</label><input type="email" id="reg-email" placeholder="you@example.com"></div>
+        <div class="field"><label>Password</label><input type="password" id="reg-pass" placeholder="Choose a strong password"></div>
+        <button class="btn-auth" onclick="doRegister()">Complete Registration ✓</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN: APP
+═══════════════════════════════════════ -->
+<div class="screen" id="screen-app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-shield">E</div>
+      <div>
+        <div class="brand-name">Earn<span>Sure</span></div>
+        <div class="brand-role" id="sidebar-role-label">Portal</div>
+      </div>
+    </div>
+    <div id="sidebar-nav"></div>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-avatar" id="sidebar-avatar">U</div>
+        <div>
+          <div class="user-name" id="sidebar-uname">User</div>
+          <div class="user-role-label" id="sidebar-urole">—</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">🚪 Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-right">
+        <div class="live-badge"><div class="live-dot"></div> Live</div>
+        <button class="btn-notif">🔔<span class="notif-badge" id="notif-count">3</span></button>
+      </div>
+    </div>
+
+    <div class="content" id="content-area">
+
+      <!-- ─── ADMIN DASHBOARD ─────────────────── -->
+      <div class="page" id="page-admin-dashboard">
+        <div class="alerts-strip">
+          <div class="alerts-title">⚡ Live Alerts</div>
+          <div class="alert-chip ac-warn">⚠️ AQI 342 detected — Andheri Zone</div>
+          <div class="alert-chip ac-danger">🚨 Worker #GW-007 offline unexpectedly</div>
+          <div class="alert-chip ac-info">ℹ️ 3 claims auto-triggered · Payout processing</div>
+        </div>
+
+        <div class="stats-row cols-4">
+          <div class="stat-card sc-blue">
+            <div class="stat-icon">🛵</div>
+            <div class="stat-value" id="adm-online">—</div>
+            <div class="stat-label">Workers Online</div>
+            <div class="stat-change up">↑ 12 from last hour</div>
+          </div>
+          <div class="stat-card sc-green">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value">₹18,450</div>
+            <div class="stat-label">Payouts Today</div>
+            <div class="stat-change up">↑ 3 auto-settled</div>
+          </div>
+          <div class="stat-card sc-gold">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-value" id="adm-pending">2</div>
+            <div class="stat-label">Claims Pending</div>
+            <div class="stat-change dn">↓ Review required</div>
+          </div>
+          <div class="stat-card sc-red">
+            <div class="stat-icon">⚡</div>
+            <div class="stat-value">AQI 342</div>
+            <div class="stat-label">Active Trigger — Andheri</div>
+            <div class="stat-change dn">↑ Threshold crossed</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <!-- MAP -->
+          <div class="panel map-panel">
+            <div class="panel-hdr">
+              <div class="panel-title">🗺️ Live Worker Map — Mumbai</div>
+              <div class="ctrl-btns" id="map-filters">
+                <button class="ctrl-btn active" data-filter="all">All</button>
+                <button class="ctrl-btn" data-filter="online">Online</button>
+                <button class="ctrl-btn" data-filter="busy">Busy</button>
+                <button class="ctrl-btn" data-filter="offline">Offline</button>
+              </div>
+            </div>
+            <div class="map-area" id="mapArea">
+              <div class="aqi-overlay" id="aqiOverlay">⚠️ AQI TRIGGER ZONE — Auto-payout active</div>
+              <!-- roads -->
+              <div class="map-road" style="width:100%;height:3px;top:30%;opacity:.12;"></div>
+              <div class="map-road" style="width:100%;height:3px;top:60%;opacity:.12;"></div>
+              <div class="map-road" style="width:3px;height:100%;left:35%;opacity:.12;"></div>
+              <div class="map-road" style="width:3px;height:100%;left:65%;opacity:.12;"></div>
+              <!-- zones -->
+              <div class="map-zone" style="width:180px;height:140px;top:12%;left:50%;transform:translate(-50%,0);border-color:rgba(245,101,0,.6);background:rgba(245,101,0,.07);">
+                <div class="zone-label" style="color:rgba(245,180,0,.9);">Andheri ⚡</div>
+              </div>
+              <div class="map-zone" style="width:155px;height:125px;top:52%;left:18%;border-color:rgba(0,82,204,.4);background:rgba(0,82,204,.05);">
+                <div class="zone-label" style="color:rgba(100,180,255,.9);">Bandra</div>
+              </div>
+              <div class="map-zone" style="width:130px;height:110px;top:62%;left:63%;border-color:rgba(40,167,69,.4);background:rgba(40,167,69,.05);">
+                <div class="zone-label" style="color:rgba(100,220,130,.9);">Kurla</div>
+              </div>
+              <div class="trigger-ring" style="width:200px;height:200px;top:28%;left:50%;"></div>
+            </div>
+            <div class="map-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Online</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div> Busy</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div> Offline</div>
+              <div class="legend-item"><div class="legend-dot" style="background:rgba(245,101,0,.8)"></div> Trigger Zone</div>
+            </div>
+          </div>
+
+          <!-- RIDERS PANEL -->
+          <div class="panel riders-panel">
+            <div class="panel-hdr">
+              <div class="panel-title">👥 Gig Workers</div>
+              <span style="font-size:.73rem;color:var(--muted);">Click to inspect</span>
+            </div>
+            <div class="rider-search">
+              <input type="text" placeholder="🔍  Search name, zone, platform…" oninput="filterRiders(this.value)">
+            </div>
+            <div class="riders-list" id="ridersList"></div>
+            <div class="rider-detail" id="riderDetail">
+              <div class="detail-title" id="detailName">Worker Details</div>
+              <div class="detail-grid" id="detailGrid"></div>
+              <button class="track-btn" id="trackBtn" onclick="toggleTracking()">📍 Start Live Tracking</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── ADMIN CLAIMS ─────────────────────── -->
+      <div class="page" id="page-admin-claims">
+        <div class="flex-between">
+          <h2 style="font-family:'Syne',sans-serif;font-size:1.2rem;">Pending Worker Claims</h2>
+          <span class="badge badge-yellow">2 Pending Review</span>
+        </div>
+        <div class="panel">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Worker ID</th><th>Name</th><th>Claim Amt</th><th>Reason</th><th>Proof</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="claims-tbody">
+                <tr>
+                  <td>#GW-2045</td><td>Arjun Sharma</td><td><strong>₹1,500</strong></td>
+                  <td>Platform outage — Zomato</td>
+                  <td><a href="#" style="color:var(--blue)">screenshot.png</a></td>
+                  <td><span class="badge badge-yellow">Pending</span></td>
+                  <td style="display:flex;gap:6px;">
+                    <button class="btn btn-success btn-sm" onclick="handleClaim(this,'Approved')">Approve</button>
+                    <button class="btn btn-danger btn-sm" onclick="handleClaim(this,'Rejected')">Reject</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>#GW-1987</td><td>Meena Iyer</td><td><strong>₹2,200</strong></td>
+                  <td>AQI auto-trigger — Andheri</td>
+                  <td><a href="#" style="color:var(--blue)">aqi_proof.pdf</a></td>
+                  <td><span class="badge badge-blue">Auto-triggered</span></td>
+                  <td style="display:flex;gap:6px;">
+                    <button class="btn btn-success btn-sm" onclick="handleClaim(this,'Approved')">Approve</button>
+                    <button class="btn btn-danger btn-sm" onclick="handleClaim(this,'Rejected')">Reject</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── ADMIN WORKER LIST ──────────────────── -->
+      <div class="page" id="page-admin-workers">
+        <div class="flex-between">
+          <h2 style="font-family:'Syne',sans-serif;font-size:1.2rem;">Gig Worker Directory</h2>
+          <input type="text" class="form-control" style="width:240px;" placeholder="🔍 Search name or ID…" oninput="filterWorkers(this.value)">
+        </div>
+        <div class="panel">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>ID</th><th>Platform</th><th>Zone</th><th>Policy</th><th>Risk Score</th><th>Status</th></tr></thead>
+              <tbody id="workers-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── GIG WORKER DASHBOARD ──────────────── -->
+      <div class="page" id="page-gig-dashboard">
+        <div class="stats-row cols-3">
+          <div class="stat-card sc-blue">
+            <div class="stat-icon">💵</div>
+            <div class="stat-value">₹18,240</div>
+            <div class="stat-label">Insured Income This Month</div>
+            <div class="stat-change up">↑ ₹2,100 from last month</div>
+          </div>
+          <div class="stat-card sc-green">
+            <div class="stat-icon">🛡️</div>
+            <div class="stat-value">Active</div>
+            <div class="stat-label">Policy Status</div>
+            <div class="stat-change up">✓ Premium Guard</div>
+          </div>
+          <div class="stat-card sc-gold">
+            <div class="stat-icon">📋</div>
+            <div class="stat-value">1</div>
+            <div class="stat-label">Pending Claim</div>
+            <div class="stat-change dn">Processing</div>
+          </div>
+        </div>
+        <div class="two-col" style="grid-template-columns:1.4fr 1fr;">
+          <div class="panel">
+            <div class="panel-hdr"><div class="panel-title">📈 Income Protection Overview</div></div>
+            <div class="panel-body"><canvas id="incomeChart" height="180"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-hdr"><div class="panel-title">⚡ Recent Activity</div></div>
+            <div class="panel-body">
+              <div class="activity-feed">
+                <div class="activity-item"><div class="act-dot" style="background:var(--green)"></div><div><div style="font-size:.85rem;font-weight:600;">₹840 payout credited</div><div style="font-size:.72rem;color:var(--muted);">Mar 10, 2024 · Bank Transfer</div></div></div>
+                <div class="activity-item"><div class="act-dot" style="background:var(--gold)"></div><div><div style="font-size:.85rem;font-weight:600;">Claim #C-2045 under review</div><div style="font-size:.72rem;color:var(--muted);">Mar 8, 2024 · Platform glitch</div></div></div>
+                <div class="activity-item"><div class="act-dot" style="background:var(--blue)"></div><div><div style="font-size:.85rem;font-weight:600;">Policy renewed successfully</div><div style="font-size:.72rem;color:var(--muted);">Mar 1, 2024 · Auto-renewed</div></div></div>
+                <div class="activity-item"><div class="act-dot" style="background:var(--green)"></div><div><div style="font-size:.85rem;font-weight:600;">₹1,200 payout credited</div><div style="font-size:.72rem;color:var(--muted);">Feb 22, 2024 · Bank Transfer</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── GIG WORKER CLAIMS ─────────────────── -->
+      <div class="page" id="page-gig-claims">
+        <div class="flex-between">
+          <h2 style="font-family:'Syne',sans-serif;font-size:1.2rem;">File an Income Claim</h2>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px;">
+          <div class="panel">
+            <div class="panel-hdr"><div class="panel-title">📝 New Claim</div></div>
+            <div class="panel-body">
+              <div class="form-group">
+                <label>Select Week</label>
+                <input type="week" class="form-control" id="claim-week">
+              </div>
+              <div class="form-group">
+                <label>Actual Earnings (₹)</label>
+                <input type="number" class="form-control" id="claim-earnings" placeholder="0.00">
+              </div>
+              <div class="form-group">
+                <label>Reason for Claim</label>
+                <select class="form-control" id="claim-reason">
+                  <option>Platform technical outage</option>
+                  <option>AQI auto-trigger (hazardous air)</option>
+                  <option>Sudden drop in order volume</option>
+                  <option>Health issue (up to 7 days)</option>
+                  <option>Unfair account deactivation</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Proof of Earnings (Screenshot)</label>
+                <input type="file" class="form-control" accept="image/*">
+              </div>
+              <button class="btn btn-primary" style="width:100%;padding:12px;justify-content:center;" onclick="submitClaim()">Submit for Review →</button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-hdr"><div class="panel-title">📋 My Claim History</div></div>
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th>Claim ID</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr><td>#C-2045</td><td>Mar 8, 2024</td><td>₹1,500</td><td><span class="badge badge-yellow">Pending</span></td></tr>
+                  <tr><td>#C-1987</td><td>Feb 22, 2024</td><td>₹840</td><td><span class="badge badge-green">Approved</span></td></tr>
+                  <tr><td>#C-1654</td><td>Jan 15, 2024</td><td>₹1,200</td><td><span class="badge badge-green">Approved</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── GIG WORKER PAYOUTS ────────────────── -->
+      <div class="page" id="page-gig-payouts">
+        <div class="stats-row cols-3">
+          <div class="stat-card sc-green">
+            <div class="stat-icon">💰</div>
+            <div class="stat-value">₹2,405</div>
+            <div class="stat-label">Available to Withdraw</div>
+            <div class="stat-change up">Ready now</div>
+          </div>
+          <div class="stat-card sc-blue">
+            <div class="stat-icon">🏦</div>
+            <div class="stat-value">₹11,500</div>
+            <div class="stat-label">Total Withdrawn</div>
+            <div class="stat-change up">All time</div>
+          </div>
+          <div class="stat-card sc-gold">
+            <div class="stat-icon">📅</div>
+            <div class="stat-value">Apr 22</div>
+            <div class="stat-label">Next Payout Date</div>
+            <div class="stat-change up">Scheduled</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr">
+            <div class="panel-title">🏦 Linked Payment Method</div>
+            <button class="btn btn-ghost btn-sm">+ Add Account</button>
+          </div>
+          <div class="panel-body">
+            <div class="payout-bank-card">
+              <div class="bank-icon">🏦</div>
+              <div>
+                <div class="bank-name">HDFC Bank •••• 5521</div>
+                <div class="bank-sub">Primary Account · IFSC: HDFC0001234</div>
+              </div>
+              <button class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="showToast('✅ Withdrawal of ₹2,405 requested!')">Withdraw Now</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><div class="panel-title">📜 Payout History</div></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Reference</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>Mar 10, 2024</td><td><strong>₹1,500</strong></td><td>Bank Transfer</td><td>TXN-84729</td><td><span class="badge badge-green">Completed</span></td></tr>
+                <tr><td>Feb 25, 2024</td><td><strong>₹2,000</strong></td><td>UPI</td><td>TXN-77821</td><td><span class="badge badge-green">Completed</span></td></tr>
+                <tr><td>Feb 10, 2024</td><td><strong>₹840</strong></td><td>Bank Transfer</td><td>TXN-71204</td><td><span class="badge badge-green">Completed</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── GIG WORKER POLICY ──────────────────── -->
+      <div class="page" id="page-gig-policy">
+        <div class="flex-between">
+          <h2 style="font-family:'Syne',sans-serif;font-size:1.2rem;">My Insurance Certificate</h2>
+          <button class="btn btn-ghost" onclick="window.print()">🖨️ Download PDF</button>
+        </div>
+        <div class="policy-card">
+          <div class="policy-id">POLICY ID: ES-IP-9928340</div>
+          <div class="policy-name">Premium Shield Plus</div>
+          <div class="policy-meta">
+            <div><div class="pm-label">Coverage</div><div class="pm-value">90% Income Protection</div></div>
+            <div><div class="pm-label">Status</div><div class="pm-value" style="color:#4ade80;">✓ ACTIVE</div></div>
+            <div><div class="pm-label">Monthly Premium</div><div class="pm-value">₹499/month</div></div>
+            <div><div class="pm-label">Max Payout</div><div class="pm-value">₹12,000/month</div></div>
+          </div>
+        </div>
+        <div class="stats-row cols-3">
+          <div class="stat-card sc-blue"><div class="stat-icon">⏱️</div><div class="stat-value">0 Days</div><div class="stat-label">Waiting Period</div></div>
+          <div class="stat-card sc-green"><div class="stat-icon">✅</div><div class="stat-value">7 Days</div><div class="stat-label">Health Cover</div></div>
+          <div class="stat-card sc-gold"><div class="stat-icon">📅</div><div class="stat-value">Apr 1, 2025</div><div class="stat-label">Renewal Date</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><div class="panel-title">🛡️ What's Covered?</div></div>
+          <div class="panel-body">
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div style="display:flex;gap:12px;align-items:center;padding:12px;background:#f8faff;border-radius:10px;border:1px solid #e2e8f8;">
+                <span style="font-size:1.3rem;">💻</span>
+                <div><div style="font-weight:600;font-size:.88rem;">Platform Technical Outage</div><div style="font-size:.76rem;color:var(--muted);">If Zomato, Swiggy or your app goes down during shifts</div></div>
+                <span class="badge badge-green" style="margin-left:auto;">Covered</span>
+              </div>
+              <div style="display:flex;gap:12px;align-items:center;padding:12px;background:#f8faff;border-radius:10px;border:1px solid #e2e8f8;">
+                <span style="font-size:1.3rem;">🌫️</span>
+                <div><div style="font-weight:600;font-size:.88rem;">Hazardous Air Quality (AQI &gt; 300)</div><div style="font-size:.76rem;color:var(--muted);">Auto-triggered payout when AQI crosses threshold in your zone</div></div>
+                <span class="badge badge-green" style="margin-left:auto;">Covered</span>
+              </div>
+              <div style="display:flex;gap:12px;align-items:center;padding:12px;background:#f8faff;border-radius:10px;border:1px solid #e2e8f8;">
+                <span style="font-size:1.3rem;">📉</span>
+                <div><div style="font-weight:600;font-size:.88rem;">Sudden Drop in Order Volume</div><div style="font-size:.76rem;color:var(--muted);">If orders drop more than 40% vs your 3-week average</div></div>
+                <span class="badge badge-green" style="margin-left:auto;">Covered</span>
+              </div>
+              <div style="display:flex;gap:12px;align-items:center;padding:12px;background:#f8faff;border-radius:10px;border:1px solid #e2e8f8;">
+                <span style="font-size:1.3rem;">🏥</span>
+                <div><div style="font-weight:600;font-size:.88rem;">Health Issues (up to 7 days)</div><div style="font-size:.76rem;color:var(--muted);">Temporary illness preventing you from working</div></div>
+                <span class="badge badge-green" style="margin-left:auto;">Covered</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── GIG WORKER PROFILE ─────────────────── -->
+      <div class="page" id="page-gig-profile">
+        <div class="panel">
+          <div class="panel-body txt-center" style="padding:32px;">
+            <div class="profile-avatar-lg" id="profile-avatar-lg">U</div>
+            <div style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;" id="profile-name">User Name</div>
+            <div style="color:var(--muted);font-size:.85rem;margin-top:4px;" id="profile-email">user@example.com</div>
+            <div class="badge badge-green" style="margin-top:8px;">Active Member</div>
+          </div>
+          <div style="padding:0 24px 24px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div style="background:#f8faff;border-radius:12px;padding:16px;">
+              <div class="di-label">Phone Number</div>
+              <div class="di-value" id="profile-phone" style="margin-top:6px;">—</div>
+            </div>
+            <div style="background:#f8faff;border-radius:12px;padding:16px;">
+              <div class="di-label">Primary Platform</div>
+              <div class="di-value" id="profile-platform" style="margin-top:6px;">—</div>
+            </div>
+            <div style="background:#f8faff;border-radius:12px;padding:16px;">
+              <div class="di-label">Zone</div>
+              <div class="di-value" id="profile-zone" style="margin-top:6px;">—</div>
+            </div>
+            <div style="background:#f8faff;border-radius:12px;padding:16px;">
+              <div class="di-label">Member Since</div>
+              <div class="di-value" style="margin-top:6px;">March 2024</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── CAPTAIN DASHBOARD ─────────────────── -->
+      <div class="page" id="page-captain-dashboard">
+        <div class="alerts-strip">
+          <div class="alerts-title">📍 Zone Status</div>
+          <div class="alert-chip ac-info">ℹ️ North Zone — All systems normal</div>
+          <div class="alert-chip ac-warn">⚠️ Gig Worker #104 earnings dropped 20%</div>
+        </div>
+        <div class="stats-row cols-3">
+          <div class="stat-card sc-blue"><div class="stat-icon">👥</div><div class="stat-value">24</div><div class="stat-label">Team Size</div><div class="stat-change up">North Zone</div></div>
+          <div class="stat-card sc-green"><div class="stat-icon">🟢</div><div class="stat-value">Stable</div><div class="stat-label">Zone Stability</div><div class="stat-change up">↑ No active triggers</div></div>
+          <div class="stat-card sc-gold"><div class="stat-icon">⏳</div><div class="stat-value">3</div><div class="stat-label">Active Claims</div><div class="stat-change dn">Pending review</div></div>
+        </div>
+        <div class="two-col" style="grid-template-columns:1.5fr 1fr;">
+          <div class="panel">
+            <div class="panel-hdr"><div class="panel-title">📊 Zone Earnings Overview</div></div>
+            <div class="panel-body"><canvas id="captainChart" height="180"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-hdr"><div class="panel-title">📢 Recent Team Activity</div></div>
+            <div class="panel-body">
+              <div class="activity-feed">
+                <div class="activity-item"><div class="act-dot" style="background:var(--danger)"></div><div><div style="font-size:.85rem;font-weight:600;">Worker #104 earnings dropped 20%</div><div style="font-size:.72rem;color:var(--muted);">Alert sent · 2 hours ago</div></div></div>
+                <div class="activity-item"><div class="act-dot" style="background:var(--green)"></div><div><div style="font-size:.85rem;font-weight:600;">Worker #201 renewed Premium Policy</div><div style="font-size:.72rem;color:var(--muted);">Auto-renewal · 5 hours ago</div></div></div>
+                <div class="activity-item"><div class="act-dot" style="background:var(--blue)"></div><div><div style="font-size:.85rem;font-weight:600;">3 new workers onboarded</div><div style="font-size:.72rem;color:var(--muted);">Yesterday · Starter Shield plan</div></div></div>
+                <div class="activity-item"><div class="act-dot" style="background:var(--gold)"></div><div><div style="font-size:.85rem;font-weight:600;">Zone earnings avg: ₹520/week</div><div style="font-size:.72rem;color:var(--muted);">Weekly summary</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── CAPTAIN TEAM ───────────────────────── -->
+      <div class="page" id="page-captain-team">
+        <div class="stats-row cols-2">
+          <div class="stat-card sc-red"><div class="stat-icon">⚠️</div><div class="stat-value">2</div><div class="stat-label">High Risk Workers</div></div>
+          <div class="stat-card sc-green"><div class="stat-icon">💵</div><div class="stat-value">₹520/wk</div><div class="stat-label">Average Earnings</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><div class="panel-title">👥 Team Directory — North Zone</div></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>ID</th><th>Last Activity</th><th>Earnings</th><th>Risk</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td>Rahul Sharma</td><td>#GW-101</td><td>2 hours ago</td><td>₹620/wk</td><td><span class="badge badge-green">● Low</span></td><td><button class="btn btn-ghost btn-sm" onclick="showToast('💬 Message sent to Rahul')">Message</button></td></tr>
+                <tr><td>Priya Patel</td><td>#GW-104</td><td>1 day ago</td><td>₹380/wk</td><td><span class="badge badge-red">● High — Hours Drop</span></td><td><button class="btn btn-primary btn-sm" onclick="showToast('📊 Review report opened')">Review</button></td></tr>
+                <tr><td>Suresh Kumar</td><td>#GW-108</td><td>3 hours ago</td><td>₹550/wk</td><td><span class="badge badge-green">● Low</span></td><td><button class="btn btn-ghost btn-sm" onclick="showToast('💬 Message sent to Suresh')">Message</button></td></tr>
+                <tr><td>Divya Nair</td><td>#GW-115</td><td>30 min ago</td><td>₹490/wk</td><td><span class="badge badge-yellow">● Medium</span></td><td><button class="btn btn-ghost btn-sm" onclick="showToast('💬 Message sent to Divya')">Message</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── SUPERADMIN ANALYTICS ──────────────── -->
+      <div class="page" id="page-super-analytics">
+        <div class="alerts-strip">
+          <div class="alerts-title">🌐 Platform Status</div>
+          <div class="alert-chip ac-green" style="background:#f0fff4;color:#22543d;border:1px solid #c6f6d5;">✅ All systems operational</div>
+          <div class="alert-chip ac-warn">⚠️ 2 zones with elevated AQI</div>
+        </div>
+        <div class="stats-row cols-4">
+          <div class="stat-card sc-blue"><div class="stat-icon">🛵</div><div class="stat-value">2,847</div><div class="stat-label">Total Workers</div><div class="stat-change up">↑ 142 this month</div></div>
+          <div class="stat-card sc-green"><div class="stat-icon">💰</div><div class="stat-value">₹42L</div><div class="stat-label">Total Payouts</div><div class="stat-change up">↑ ₹8L from last month</div></div>
+          <div class="stat-card sc-gold"><div class="stat-icon">📋</div><div class="stat-value">94</div><div class="stat-label">Claims This Month</div><div class="stat-change up">87% approved</div></div>
+          <div class="stat-card sc-purple"><div class="stat-icon">🗺️</div><div class="stat-value">18</div><div class="stat-label">Active Zones</div><div class="stat-change up">↑ 2 new zones</div></div>
+        </div>
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-hdr"><div class="panel-title">📈 Platform-wide Payouts</div></div>
+            <div class="panel-body"><canvas id="superChart" height="200"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-hdr"><div class="panel-title">🗺️ Zone Risk Overview</div></div>
+            <div class="panel-body">
+              <div style="display:flex;flex-direction:column;gap:14px;">
+                <div><div class="flex-between" style="margin-bottom:6px;"><span style="font-size:.85rem;font-weight:600;">Andheri (Mumbai)</span><span class="badge badge-red">High Risk</span></div><div class="risk-bar"><div class="risk-fill" style="width:82%;background:var(--danger);"></div></div></div>
+                <div><div class="flex-between" style="margin-bottom:6px;"><span style="font-size:.85rem;font-weight:600;">Bandra (Mumbai)</span><span class="badge badge-yellow">Medium</span></div><div class="risk-bar"><div class="risk-fill" style="width:48%;background:var(--gold);"></div></div></div>
+                <div><div class="flex-between" style="margin-bottom:6px;"><span style="font-size:.85rem;font-weight:600;">Kurla (Mumbai)</span><span class="badge badge-green">Low Risk</span></div><div class="risk-bar"><div class="risk-fill" style="width:22%;background:var(--green);"></div></div></div>
+                <div><div class="flex-between" style="margin-bottom:6px;"><span style="font-size:.85rem;font-weight:600;">Koramangala (Blr)</span><span class="badge badge-yellow">Medium</span></div><div class="risk-bar"><div class="risk-fill" style="width:54%;background:var(--gold);"></div></div></div>
+                <div><div class="flex-between" style="margin-bottom:6px;"><span style="font-size:.85rem;font-weight:600;">Central Delhi</span><span class="badge badge-green">Low Risk</span></div><div class="risk-bar"><div class="risk-fill" style="width:18%;background:var(--green);"></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /screen-app -->
+
+<script>
+/* ═══════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════ */
+let state = {
+  user: null,
+  currentPage: null,
+  tracking: false,
+  trackingInterval: null,
+  selectedRider: null,
+  chartsInitialized: {},
+};
+
+/* ═══════════════════════════════════════════════
+   AUTH
+═══════════════════════════════════════════════ */
+function switchAuthTab(tab, btn) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('auth-' + tab).classList.add('active');
+}
+
+let regStep = 0;
+function regNext(next) {
+  document.getElementById('reg-step-' + regStep).style.display = 'none';
+  document.getElementById('sd' + regStep).classList.remove('active');
+  document.getElementById('sd' + regStep).classList.add('done');
+  regStep = next;
+  document.getElementById('reg-step-' + regStep).style.display = 'block';
+  document.getElementById('sd' + regStep).classList.add('active');
+}
+
+function doRegister() {
+  const name = document.getElementById('reg-name').value || 'Gig Worker';
+  const phone = document.getElementById('reg-phone').value || '+91 9876543210';
+  const platform = document.getElementById('reg-platform').value;
+  const zone = document.getElementById('reg-zone').value;
+  const email = document.getElementById('reg-email').value || 'worker@earnsure.in';
+  state.user = { name, phone, platform, zone, email, role: 'gig', id: 'GW-' + Math.floor(1000+Math.random()*9000) };
+  launchApp();
+}
+
+function doLogin() {
+  const role = document.getElementById('login-role').value;
+  const email = document.getElementById('login-email').value || 'user@earnsure.in';
+  const names = { gig: 'Arjun Sharma', captain: 'Rajesh Kapoor', admin: 'Admin User', superadmin: 'Super Admin' };
+  state.user = { name: names[role] || 'User', email, role, phone: '+91 9876543210', platform: 'Zomato', zone: 'Mumbai — Andheri', id: 'ES-' + Math.floor(1000+Math.random()*9000) };
+  launchApp();
+}
+
+function doLogout() {
+  state = { user: null, currentPage: null, tracking: false, trackingInterval: null, selectedRider: null, chartsInitialized: {} };
+  document.getElementById('screen-auth').classList.add('active');
+  document.getElementById('screen-app').classList.remove('active');
+  // Reset login form
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-pass').value = '';
+  regStep = 0;
+}
+
+/* ═══════════════════════════════════════════════
+   APP LAUNCH
+═══════════════════════════════════════════════ */
+const NAV_CONFIG = {
+  admin: {
+    role: 'Admin Staff',
+    sections: [
+      { label: 'Overview', links: [{ icon:'📊', text:'Dashboard', page:'admin-dashboard' }] },
+      { label: 'Operations', links: [
+        { icon:'📋', text:'Claims Management', page:'admin-claims' },
+        { icon:'👥', text:'All Gig Workers', page:'admin-workers' },
+      ]},
+      { label: 'System', links: [
+        { icon:'💳', text:'Settlements', page:'#' },
+        { icon:'⚙️', text:'Settings', page:'#' },
+      ]},
+    ],
+    defaultPage: 'admin-dashboard',
+  },
+  gig: {
+    role: 'Gig Worker',
+    sections: [
+      { label: 'My Portal', links: [
+        { icon:'📊', text:'Dashboard', page:'gig-dashboard' },
+        { icon:'📋', text:'File a Claim', page:'gig-claims' },
+        { icon:'💰', text:'Payouts', page:'gig-payouts' },
+        { icon:'🛡️', text:'My Policy', page:'gig-policy' },
+        { icon:'👤', text:'My Profile', page:'gig-profile' },
+      ]},
+    ],
+    defaultPage: 'gig-dashboard',
+  },
+  captain: {
+    role: 'Zone Captain',
+    sections: [
+      { label: 'Zone Portal', links: [
+        { icon:'📍', text:'Zone Overview', page:'captain-dashboard' },
+        { icon:'👥', text:'My Team', page:'captain-team' },
+      ]},
+    ],
+    defaultPage: 'captain-dashboard',
+  },
+  superadmin: {
+    role: 'Super Admin',
+    sections: [
+      { label: 'Platform', links: [
+        { icon:'📈', text:'Analytics', page:'super-analytics' },
+        { icon:'🗺️', text:'Zone Risk Map', page:'super-analytics' },
+        { icon:'⚙️', text:'Settings', page:'#' },
+      ]},
+    ],
+    defaultPage: 'super-analytics',
+  },
+};
+
+function launchApp() {
+  const u = state.user;
+  const cfg = NAV_CONFIG[u.role] || NAV_CONFIG.gig;
+
+  // Sidebar
+  document.getElementById('sidebar-role-label').textContent = cfg.role + ' Portal';
+  document.getElementById('sidebar-avatar').textContent = u.name.split(' ').map(n=>n[0]).join('').slice(0,2);
+  document.getElementById('sidebar-uname').textContent = u.name;
+  document.getElementById('sidebar-urole').textContent = cfg.role;
+
+  // Build nav
+  let navHtml = '';
+  cfg.sections.forEach(sec => {
+    navHtml += `<div class="nav-section">${sec.label}</div>`;
+    sec.links.forEach(l => {
+      navHtml += `<div class="nav-link" onclick="navigateTo('${l.page}',this)">
+        <span class="ni">${l.icon}</span> ${l.text}
+      </div>`;
+    });
+  });
+  document.getElementById('sidebar-nav').innerHTML = navHtml;
+
+  // Screens
+  document.getElementById('screen-auth').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+
+  // Navigate to default
+  navigateTo(cfg.defaultPage);
+
+  // Role-specific inits
+  if (u.role === 'admin') initAdminMap();
+  if (u.role === 'gig') updateProfilePage();
+}
+
+/* ═══════════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════════ */
+const PAGE_TITLES = {
+  'admin-dashboard': 'Live <span>Gig Worker Tracking</span> — Admin View',
+  'admin-claims': 'Claims <span>Management</span>',
+  'admin-workers': 'Gig Worker <span>Directory</span>',
+  'gig-dashboard': 'My <span>Earnings Dashboard</span>',
+  'gig-claims': 'File an <span>Income Claim</span>',
+  'gig-payouts': 'My <span>Payouts</span>',
+  'gig-policy': 'My <span>Policy Certificate</span>',
+  'gig-profile': 'My <span>Profile</span>',
+  'captain-dashboard': 'Zone <span>Overview</span>',
+  'captain-team': 'My <span>Team</span>',
+  'super-analytics': 'Platform <span>Analytics</span>',
+};
+
+function navigateTo(pageId, navEl) {
+  if (pageId === '#') { showToast('🚧 Coming soon!'); return; }
+  // Deactivate all pages
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+  // Activate target page
+  const pg = document.getElementById('page-' + pageId);
+  if (pg) pg.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  // Update topbar title
+  document.getElementById('topbar-title').innerHTML = PAGE_TITLES[pageId] || pageId;
+  state.currentPage = pageId;
+  // Init charts lazily
+  setTimeout(() => initCharts(pageId), 50);
+  // Init workers table
+  if (pageId === 'admin-workers') renderWorkersTable(workersData);
+}
+
+/* ═══════════════════════════════════════════════
+   CHARTS
+═══════════════════════════════════════════════ */
+function initCharts(pageId) {
+  if (pageId === 'gig-dashboard' && !state.chartsInitialized['incomeChart']) {
+    state.chartsInitialized['incomeChart'] = true;
+    new Chart(document.getElementById('incomeChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Oct','Nov','Dec','Jan','Feb','Mar'],
+        datasets: [
+          { label:'Earned', data:[14200,16800,15400,18900,17200,18240], backgroundColor:'rgba(0,82,204,0.15)', borderColor:'#0052cc', borderWidth:2, borderRadius:6 },
+          { label:'Protected', data:[2000,1800,3200,800,2100,1800], backgroundColor:'rgba(40,167,69,0.2)', borderColor:'#28a745', borderWidth:2, borderRadius:6 },
+        ]
+      },
+      options: { responsive:true, plugins:{ legend:{position:'top'} }, scales:{ y:{ beginAtZero:true, grid:{color:'#f0f4ff'} } } }
+    });
+  }
+  if (pageId === 'captain-dashboard' && !state.chartsInitialized['captainChart']) {
+    state.chartsInitialized['captainChart'] = true;
+    new Chart(document.getElementById('captainChart'), {
+      type: 'line',
+      data: {
+        labels: ['Week 1','Week 2','Week 3','Week 4'],
+        datasets: [{ label:'Zone Avg Earnings (₹/wk)', data:[480,520,510,540], backgroundColor:'rgba(0,82,204,0.1)', borderColor:'#0052cc', borderWidth:2.5, tension:.4, fill:true, pointBackgroundColor:'#0052cc', pointRadius:4 }]
+      },
+      options: { responsive:true, plugins:{ legend:{position:'top'} }, scales:{ y:{ beginAtZero:false, grid:{color:'#f0f4ff'} } } }
+    });
+  }
+  if (pageId === 'super-analytics' && !state.chartsInitialized['superChart']) {
+    state.chartsInitialized['superChart'] = true;
+    new Chart(document.getElementById('superChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Oct','Nov','Dec','Jan','Feb','Mar'],
+        datasets: [
+          { label:'Total Payouts (₹L)', data:[28,34,31,38,40,42], backgroundColor:'rgba(0,82,204,0.15)', borderColor:'#0052cc', borderWidth:2, borderRadius:6 },
+          { label:'Claims Count', data:[62,78,70,88,91,94], backgroundColor:'rgba(40,167,69,0.15)', borderColor:'#28a745', borderWidth:2, borderRadius:6 },
+        ]
+      },
+      options: { responsive:true, plugins:{ legend:{position:'top'} }, scales:{ y:{ beginAtZero:true, grid:{color:'#f0f4ff'} } } }
+    });
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   ADMIN MAP & RIDERS
+═══════════════════════════════════════════════ */
+const riders = [
+  { id:'R-001', name:'Arjun Sharma',  platform:'Zomato', zone:'Andheri', status:'online',  lat:22, lng:52, earnings:'₹840',   policy:'Premium Guard',  deliveries:14, color:'#2563eb' },
+  { id:'R-002', name:'Priya Nair',    platform:'Swiggy', zone:'Andheri', status:'busy',    lat:28, lng:58, earnings:'₹1,120', policy:'Premium Guard',  deliveries:19, color:'#7c3aed' },
+  { id:'R-003', name:'Rahul Gupta',   platform:'Zepto',  zone:'Bandra',  status:'online',  lat:62, lng:18, earnings:'₹560',   policy:'Starter Shield', deliveries:9,  color:'#059669' },
+  { id:'R-004', name:'Meena Iyer',    platform:'Zomato', zone:'Bandra',  status:'busy',    lat:68, lng:25, earnings:'₹990',   policy:'Premium Guard',  deliveries:16, color:'#d97706' },
+  { id:'R-005', name:'Suresh Kumar',  platform:'Swiggy', zone:'Kurla',   status:'online',  lat:70, lng:68, earnings:'₹430',   policy:'Starter Shield', deliveries:7,  color:'#dc2626' },
+  { id:'R-006', name:'Divya Patel',   platform:'Zepto',  zone:'Andheri', status:'online',  lat:35, lng:48, earnings:'₹780',   policy:'Premium Guard',  deliveries:13, color:'#0891b2' },
+  { id:'R-007', name:'Vikram Singh',  platform:'Zomato', zone:'Kurla',   status:'offline', lat:78, lng:72, earnings:'₹0',     policy:'Starter Shield', deliveries:0,  color:'#6b7280' },
+  { id:'R-008', name:'Ananya Roy',    platform:'Swiggy', zone:'Bandra',  status:'busy',    lat:58, lng:30, earnings:'₹1,340', policy:'Premium Guard',  deliveries:22, color:'#7c3aed' },
+];
+
+function initAdminMap() {
+  document.getElementById('adm-online').textContent = riders.filter(r => r.status !== 'offline').length;
+  renderRidersList(riders);
+  renderMapDots(riders);
+  setTimeout(() => document.getElementById('aqiOverlay').classList.add('show'), 1500);
+  setInterval(simulateMovement, 2200);
+  document.getElementById('map-filters').addEventListener('click', e => {
+    const btn = e.target.closest('.ctrl-btn');
+    if (!btn) return;
+    document.querySelectorAll('#map-filters .ctrl-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const f = btn.dataset.filter;
+    renderMapDots(f === 'all' ? riders : riders.filter(r => r.status === f));
+  });
+}
+
+function renderRidersList(list) {
+  document.getElementById('ridersList').innerHTML = list.map(r => `
+    <div class="rider-item" id="ri-${r.id}" onclick="selectRider('${r.id}')">
+      <div class="r-avatar" style="background:${r.color}">${r.name.split(' ').map(n=>n[0]).join('')}</div>
+      <div class="r-info">
+        <div class="r-name">${r.name}</div>
+        <div class="r-meta">${r.id} · ${r.platform} · ${r.zone}</div>
+      </div>
+      <span class="badge ${r.status==='online'?'badge-green':r.status==='busy'?'badge-yellow':'badge-red'}">${r.status}</span>
+    </div>`).join('');
+}
+
+function filterRiders(q) {
+  const f = q ? riders.filter(r => [r.name,r.platform,r.zone,r.id].some(v => v.toLowerCase().includes(q.toLowerCase()))) : riders;
+  renderRidersList(f);
+}
+
+function selectRider(id) {
+  document.querySelectorAll('.rider-item').forEach(el => el.classList.remove('active'));
+  const item = document.getElementById('ri-' + id);
+  if (item) item.classList.add('active');
+  state.selectedRider = riders.find(r => r.id === id);
+  const r = state.selectedRider;
+  document.getElementById('riderDetail').classList.add('show');
+  document.getElementById('detailName').textContent = '📍 ' + r.name;
+  document.getElementById('detailGrid').innerHTML = `
+    <div><div class="di-label">Rider ID</div><div class="di-value">${r.id}</div></div>
+    <div><div class="di-label">Platform</div><div class="di-value">${r.platform}</div></div>
+    <div><div class="di-label">Zone</div><div class="di-value">${r.zone}</div></div>
+    <div><div class="di-label">Status</div><div class="di-value" style="text-transform:capitalize">${r.status}</div></div>
+    <div><div class="di-label">Today's Earnings</div><div class="di-value">${r.earnings}</div></div>
+    <div><div class="di-label">Deliveries</div><div class="di-value">${r.deliveries}</div></div>
+    <div><div class="di-label">Policy</div><div class="di-value">${r.policy}</div></div>
+    <div><div class="di-label">GPS Signal</div><div class="di-value" style="color:var(--green)">● Strong</div></div>`;
+  // Highlight on map
+  document.querySelectorAll('.rider-dot').forEach(d => d.classList.remove('rd-selected'));
+  const dot = document.getElementById('dot-' + id);
+  if (dot) dot.classList.add('rd-selected');
+  // Reset tracking
+  state.tracking = false;
+  const btn = document.getElementById('trackBtn');
+  btn.textContent = '📍 Start Live Tracking';
+  btn.classList.remove('tracking');
+  if (state.trackingInterval) clearInterval(state.trackingInterval);
+}
+
+function toggleTracking() {
+  if (!state.selectedRider) return;
+  state.tracking = !state.tracking;
+  const btn = document.getElementById('trackBtn');
+  const dot = document.getElementById('dot-' + state.selectedRider.id);
+  if (state.tracking) {
+    btn.textContent = '⏹ Stop Tracking';
+    btn.classList.add('tracking');
+    if (dot) dot.classList.add('rd-moving');
+    showToast('📍 Live tracking started for ' + state.selectedRider.name);
+  } else {
+    btn.textContent = '📍 Start Live Tracking';
+    btn.classList.remove('tracking');
+    if (dot) dot.classList.remove('rd-moving');
+    clearInterval(state.trackingInterval);
+  }
+}
+
+function renderMapDots(list) {
+  const map = document.getElementById('mapArea');
+  map.querySelectorAll('.rider-dot').forEach(d => d.remove());
+  list.forEach(r => {
+    const dot = document.createElement('div');
+    dot.className = `rider-dot rd-${r.status}`;
+    dot.id = 'dot-' + r.id;
+    dot.style.cssText = `left:${r.lng}%;top:${r.lat}%;`;
+    dot.textContent = r.name[0];
+    dot.innerHTML += `<div class="rider-tooltip"><strong>${r.name}</strong><br>${r.id} · ${r.platform}<br>Zone: ${r.zone}<br>Deliveries: ${r.deliveries}<br>Earnings: ${r.earnings}</div>`;
+    dot.onclick = () => selectRider(r.id);
+    map.appendChild(dot);
+  });
+}
+
+function simulateMovement() {
+  riders.forEach(r => {
+    if (r.status !== 'offline') {
+      r.lat = Math.max(5, Math.min(90, r.lat + (Math.random() - 0.5) * 2.5));
+      r.lng = Math.max(5, Math.min(90, r.lng + (Math.random() - 0.5) * 2.5));
+      const dot = document.getElementById('dot-' + r.id);
+      if (dot) { dot.style.left = r.lng + '%'; dot.style.top = r.lat + '%'; }
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   ADMIN WORKERS TABLE
+═══════════════════════════════════════════════ */
+const workersData = [
+  { name:'Arjun Sharma',  id:'#GW-001', platform:'Zomato', zone:'Andheri', policy:'Premium Guard',  risk:18, status:'online' },
+  { name:'Priya Nair',    id:'#GW-002', platform:'Swiggy', zone:'Andheri', policy:'Premium Guard',  risk:22, status:'busy' },
+  { name:'Rahul Gupta',   id:'#GW-003', platform:'Zepto',  zone:'Bandra',  policy:'Starter Shield', risk:45, status:'online' },
+  { name:'Meena Iyer',    id:'#GW-004', platform:'Zomato', zone:'Bandra',  policy:'Premium Guard',  risk:31, status:'busy' },
+  { name:'Suresh Kumar',  id:'#GW-005', platform:'Swiggy', zone:'Kurla',   policy:'Starter Shield', risk:67, status:'online' },
+  { name:'Divya Patel',   id:'#GW-006', platform:'Zepto',  zone:'Andheri', policy:'Premium Guard',  risk:12, status:'online' },
+  { name:'Vikram Singh',  id:'#GW-007', platform:'Zomato', zone:'Kurla',   policy:'Starter Shield', risk:88, status:'offline' },
+  { name:'Ananya Roy',    id:'#GW-008', platform:'Swiggy', zone:'Bandra',  policy:'Premium Guard',  risk:29, status:'busy' },
+];
+
+function renderWorkersTable(data) {
+  document.getElementById('workers-tbody').innerHTML = data.map(w => {
+    const rc = w.risk > 70 ? 'badge-red' : w.risk > 40 ? 'badge-yellow' : 'badge-green';
+    const sc = w.status === 'online' ? 'badge-green' : w.status === 'busy' ? 'badge-yellow' : 'badge-red';
+    return `<tr>
+      <td><strong>${w.name}</strong></td><td style="color:var(--muted);font-size:.78rem;">${w.id}</td>
+      <td>${w.platform}</td><td>${w.zone}</td><td>${w.policy}</td>
+      <td><span class="badge ${rc}">${w.risk}%</span></td>
+      <td><span class="badge ${sc}">${w.status}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterWorkers(q) {
+  const f = q ? workersData.filter(w => [w.name,w.id,w.platform,w.zone].some(v => v.toLowerCase().includes(q.toLowerCase()))) : workersData;
+  renderWorkersTable(f);
+}
+
+/* ═══════════════════════════════════════════════
+   CLAIMS
+═══════════════════════════════════════════════ */
+function handleClaim(btn, status) {
+  const row = btn.closest('tr');
+  const isApproved = status === 'Approved';
+  row.style.opacity = '.4';
+  btn.closest('td').innerHTML = `<span class="badge ${isApproved?'badge-green':'badge-red'}">${status}</span>`;
+  showToast(`${isApproved ? '✅' : '❌'} Claim ${status.toLowerCase()} successfully`);
+  document.getElementById('adm-pending').textContent = Math.max(0, parseInt(document.getElementById('adm-pending').textContent) - 1);
+}
+
+function submitClaim() {
+  const week = document.getElementById('claim-week').value;
+  const amt = document.getElementById('claim-earnings').value;
+  if (!week || !amt) { showToast('⚠️ Please fill all required fields'); return; }
+  showToast('✅ Claim submitted for review! You\'ll be notified within 24 hrs.');
+}
+
+/* ═══════════════════════════════════════════════
+   PROFILE
+═══════════════════════════════════════════════ */
+function updateProfilePage() {
+  const u = state.user;
+  const initials = u.name.split(' ').map(n=>n[0]).join('').slice(0,2);
+  document.getElementById('profile-avatar-lg').textContent = initials;
+  document.getElementById('profile-name').textContent = u.name;
+  document.getElementById('profile-email').textContent = u.email;
+  document.getElementById('profile-phone').textContent = u.phone;
+  document.getElementById('profile-platform').textContent = u.platform || '—';
+  document.getElementById('profile-zone').textContent = u.zone || '—';
+}
+
+/* ═══════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════ */
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+</script>
+</body>
+</html>
